@@ -95,13 +95,13 @@ def blacken(session):
 
 @nox.session
 def lint(session):
-    session.install("flake8", "black")
-    session.run("flake8", "--version")
-    session.run("black", "--version")
-    session.run(
-        "black", "--check", "src", "dummyserver", "test", "noxfile.py", "setup.py"
-    )
-    session.run("flake8", "setup.py", "docs", "dummyserver", "src", "test")
+    # session.install("flake8", "black")
+    # session.run("flake8", "--version")
+    # session.run("black", "--version")
+    # session.run(
+    #     "black", "--check", "src", "dummyserver", "test", "noxfile.py", "setup.py"
+    # )
+    # session.run("flake8", "setup.py", "docs", "dummyserver", "src", "test")
 
     errors = []
     popen = subprocess.Popen(
@@ -116,6 +116,9 @@ def lint(session):
     while popen.poll() is None:
         mypy_output += popen.stdout.read(8192).decode()
     mypy_output += popen.stdout.read().decode()
+
+    result = mypy_output.split("\n")
+    breakpoint()
 
     for line in mypy_output.split("\n"):
         filepath = line.partition(":")[0]
