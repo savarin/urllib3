@@ -5,6 +5,7 @@
 
 import re
 import sys
+from typing import Any, Dict, Tuple, Union
 
 # ipaddress has been backported to 2.6+ in pypi.  If it is installed on the
 # system, use it to handle IPAddress ServerAltnames (this was added in
@@ -13,9 +14,15 @@ import sys
 try:
     import ipaddress
 except ImportError:
-    ipaddress = None
+    ipaddress = None  # type: ignore
 
 __version__ = "3.5.0.1"
+
+# https://github.com/python/typeshed/blob/master/stdlib/2and3/ssl.pyi
+_PCTRTT = Tuple[Tuple[str, str], ...]
+_PCTRTTT = Tuple[_PCTRTT, ...]
+_PeerCertRetDictType = Dict[str, Union[str, _PCTRTTT, _PCTRTT]]
+_PeerCertRetType = Union[_PeerCertRetDictType, bytes, None]
 
 
 class CertificateError(ValueError):
@@ -23,6 +30,7 @@ class CertificateError(ValueError):
 
 
 def _dnsname_match(dn, hostname, max_wildcards=1):
+    # type: (Any, Any, int) -> Any
     """Matching according to RFC 6125, section 6.4.3
 
     http://tools.ietf.org/html/rfc6125#section-6.4.3
@@ -77,12 +85,14 @@ def _dnsname_match(dn, hostname, max_wildcards=1):
 
 
 def _to_unicode(obj):
+    # type: (str) -> str
     if isinstance(obj, str) and sys.version_info < (3,):
-        obj = unicode(obj, encoding="ascii", errors="strict")
+        obj = unicode(obj, encoding="ascii", errors="strict")  # type: ignore
     return obj
 
 
 def _ipaddress_match(ipname, host_ip):
+    # type: (Any, Any) -> Any
     """Exact matching of IP addresses.
 
     RFC 6125 explicitly doesn't define an algorithm for this
@@ -95,6 +105,7 @@ def _ipaddress_match(ipname, host_ip):
 
 
 def match_hostname(cert, hostname):
+    # type: (_PeerCertRetType, str) -> None
     """Verify that *cert* (in decoded format as returned by
     SSLSocket.getpeercert()) matches the *hostname*.  RFC 2818 and RFC 6125
     rules are followed, but IP addresses are not accepted for *hostname*.
@@ -126,8 +137,8 @@ def match_hostname(cert, hostname):
         else:
             raise
     dnsnames = []
-    san = cert.get("subjectAltName", ())
-    for key, value in san:
+    san = cert.get("subjectAltName", ())  # type: ignore
+    for key, value in san:  # type: ignore
         if key == "DNS":
             if host_ip is None and _dnsname_match(value, hostname):
                 return
@@ -139,8 +150,8 @@ def match_hostname(cert, hostname):
     if not dnsnames:
         # The subject is only checked when there is no dNSName entry
         # in subjectAltName
-        for sub in cert.get("subject", ()):
-            for key, value in sub:
+        for sub in cert.get("subject", ()):  # type: ignore
+            for key, value in sub:  # type: ignore
                 # XXX according to RFC 2818, the most specific Common Name
                 # must be used.
                 if key == "commonName":
