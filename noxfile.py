@@ -120,11 +120,13 @@ def lint(session):
     )
     # Ensure that mypy itself ran succesfully
     assert process.returncode in (0, 1)
-
+    all_errors = []
     for line in process.stdout.split("\n"):
+        all_errors.append(line)
         filepath = line.partition(":")[0]
-        if filepath.replace(".pyi", ".py") in TYPED_FILES:
+        if filepath in TYPED_FILES:
             errors.append(line)
+    session.log("all errors count: {}".format(len(all_errors)))
     if errors:
         session.error("\n" + "\n".join(sorted(set(errors))))
 
